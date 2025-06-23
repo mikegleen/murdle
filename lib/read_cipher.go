@@ -2,7 +2,6 @@ package lib
 
 import (
 	"bufio"
-	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -11,13 +10,32 @@ import (
 	"strings"
 )
 
+/*
+The data file contains one row for each cipher.
+Blank rows and rows with '#' in column 1 are ignored.
+
+Field
+1       Puzzle number in decimal
+2       Cipher number on page
+3       Cipher type
+3-n 	The cipher
+
+The cipher types are:
+A Detecive Code
+B Anagrams
+C Caesar
+*/
 const DATAFILE = "data.txt"
 
-func ReadCipher(key int) (string, error) {
+func ReadCipher(filename string, key int) (string, error) {
+	// Allow the user to enter just the puzzle number without the trailing cipher number.
 	if key < 100 {
 		key = key*10 + 1
 	}
-	datafile, err := os.Open(DATAFILE)
+	datafile, err := os.Open(filename)
+	if err != nil {
+		panic(err)
+	}
 	scanner := bufio.NewScanner(datafile)
 	var ix, jx int
 	for scanner.Scan() {

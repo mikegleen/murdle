@@ -12,6 +12,8 @@ import (
 	"strconv"
 	"strings"
 
+	"lib"
+
 	"github.com/etnz/permute"
 )
 
@@ -44,46 +46,15 @@ func main() {
 	}
 	// fmt.Println(lokup)
 
-	cipher := make(map[int]string)
-	datafile, err := os.Open(DATAFILE)
-	if err != nil {
-		panic(fmt.Sprint("Cannot open ", DATAFILE))
-	}
-	scanner := bufio.NewScanner(datafile)
-	var ix int
-	for scanner.Scan() {
-		line := scanner.Text()
-		err = scanner.Err()
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			log.Fatal(err)
-		}
-		line = strings.TrimSpace(line)
-		if len(line) == 0 || line[0] == '#' {
-			continue
-		}
-		fmt.Sscanf(line, "%2d", &ix)
-		// fmt.Println(ix)
-		_, ok := cipher[ix]
-		if ok {
-			panic(fmt.Sprint("Duplicate problem number: ", ix))
-		}
-		// fmt.Println(ix)
-		cipher[ix] = line[2:]
-	}
-	datafile.Close()
-
 	/*
 		Load the dictionary
 	*/
 	wordDict := make(map[string]struct{})
-	datafile, err = os.Open(DICTFILE)
+	datafile, err := os.Open(DICTFILE)
 	if err != nil {
 		panic(fmt.Sprint("Cannot open ", DATAFILE))
 	}
-	scanner = bufio.NewScanner(datafile)
+	scanner := bufio.NewScanner(datafile)
 	for scanner.Scan() {
 		line := scanner.Text()
 		err = scanner.Err()
@@ -102,14 +73,15 @@ func main() {
 	}
 	datafile.Close()
 
-	// os.Exit(0)
 	c, _ := strconv.Atoi(os.Args[1]) // get the cipher number
-	if len(cipher[c]) == 0 {
-		panic("\nUndefined cipher.")
+	ciphertext, err := lib.ReadCipher(DATAFILE, c)
+	if err != nil {
+		panic(err)
 	}
 
 	reg, _ := regexp.Compile("[^A-Z]+") // remove everything except letters
-	words := strings.Fields(cipher[c])
+	// words := strings.Fields(cipher[c])
+	words := strings.Fields(ciphertext)
 	// fmt.Println("cipher:", cipher[c], "\nwords: ", words)
 	for _, word := range words {
 		rword := reg.ReplaceAllString(word, "")
